@@ -1,4 +1,4 @@
-# ETS2SE_v1.6
+# ETS2SE
 
 > 与 SCS Software 无关，仅限单机使用，不含游戏素材和存档。
 
