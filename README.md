@@ -1,8 +1,10 @@
-# 欧卡2 存档修改器（非官方）
+# ETS2 Save Editor (Unofficial)
 
-> 与 SCS Software 无关，仅限单机使用，不含游戏素材和存档。
+> Not affiliated with SCS Software. Single-player use only.
 
-## 声明
+## Legal
 
-MIT 许可证；存档格式参考 SII_Decrypt（MPL-2.0），界面参考 TS SE Tool（Apache-2.0），
-详见 `NOTICE.txt`。风险自负，联机请勿使用修改过的存档。
+MIT licensed; save-format knowledge based on SII_Decrypt (MPL-2.0), UI inspired by TS SE Tool (Apache-2.0), see `NOTICE.txt`.
+
+UI icons are taken from the game and the original tool; copyright belongs to SCS Software, used for compatibility display only and will be removed on request.
+Use at your own risk; do not use edited saves online.
