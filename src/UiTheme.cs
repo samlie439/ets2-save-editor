@@ -15,7 +15,13 @@ namespace Ets2Save
         public static readonly Color GoldLight = Color.FromArgb(226, 190, 110);
         public static readonly Color GreyLight = Color.FromArgb(214, 214, 214);
         public static readonly Color GreyDark = Color.FromArgb(160, 160, 160);
-        public static readonly Color Accent = Color.FromArgb(0, 102, 204);
+        public static readonly Color Accent = Color.FromArgb(140, 184, 242);
+        public static readonly Color AccentDeep = Color.FromArgb(96, 150, 226);
+        public static readonly Color Bg = Color.FromArgb(242, 243, 245);
+        public static readonly Color Surface = Color.White;
+        public static readonly Color Border = Color.FromArgb(222, 226, 232);
+        public static readonly Color Ink = Color.FromArgb(31, 35, 40);
+        public static readonly Color Muted = Color.FromArgb(110, 118, 129);
 
         public static Bitmap Gradient(Color top, Color bottom, int width, int height)
         {
@@ -97,12 +103,20 @@ namespace Ets2Save
                 Color.FromArgb(214, 84, 40), Color.FromArgb(60, 110, 170), Color.FromArgb(196, 156, 40),
                 Color.FromArgb(150, 60, 60), Color.FromArgb(60, 140, 80), Color.FromArgb(70, 140, 140)
             };
-            string[] glyphs = { "危", "远", "贵", "碎", "急", "油" };
-            if (index == 0)
+            string[] files = { "skill_adr", "skill_distance", "skill_heavy", "skill_fragile", "skill_jit", "skill_mechanical" };
+            Image art = UiAssets.Get(files[index]);
+            if (art != null)
             {
-                Image adr = UiAssets.Get("adr_1", size, size);
-                if (adr != null) return new Bitmap(adr);
+                Bitmap tile = new Bitmap(size, size);
+                using (Graphics g = Graphics.FromImage(tile))
+                {
+                    g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                    int half = art.Width / 2;
+                    g.DrawImage(art, new Rectangle(0, 0, size, size), new Rectangle(0, 0, half, art.Height), GraphicsUnit.Pixel);
+                }
+                return tile;
             }
+            string[] glyphs = { "危", "远", "贵", "碎", "急", "油" };
             Bitmap bmp = new Bitmap(size, size);
             using (Graphics g = Graphics.FromImage(bmp))
             {
@@ -207,5 +221,180 @@ namespace Ets2Save
             box.FlatAppearance.BorderColor = Color.FromArgb(120, 90, 40);
             box.BackgroundImageLayout = ImageLayout.Stretch;
         }
-    }
+
+        public static GraphicsPath Rounded(Rectangle rect, int radius)
+        {
+            GraphicsPath path = new GraphicsPath();
+            int d = radius * 2;
+            path.AddArc(rect.X, rect.Y, d, d, 180, 90);
+            path.AddArc(rect.Right - d, rect.Y, d, d, 270, 90);
+            path.AddArc(rect.Right - d, rect.Bottom - d, d, d, 0, 90);
+            path.AddArc(rect.X, rect.Bottom - d, d, d, 90, 90);
+            path.CloseFigure();
+            return path;
+        }
+
+        static readonly string[] PrimaryNames = { "加载存档", "保存", "购买", "修复全部", "加满油", "生成所选货运", "添加任务到列表" };
+
+        public static void Modernize(Control root)
+        {
+            foreach (Control c in root.Controls)
+            {
+                Button b = c as Button;
+                if (b != null)
+                {
+                    StyleButton(b, Array.IndexOf(PrimaryNames, b.Text) >= 0 || b.BackColor == Accent);
+                }
+                if (c is TextBox) WrapField(c);
+                if (c is ComboBox) WrapField(c);
+                if (c is ListBox)
+                {
+                    ListBox lb = (ListBox)c;
+                    lb.BorderStyle = BorderStyle.None;
+                    lb.BackColor = Surface;
+                }
+                if (c is Label)
+                {
+                    Label l = (Label)c;
+                    if (l.ForeColor == Color.DimGray || l.ForeColor == Color.Black)
+                        l.ForeColor = Muted;
+                }
+                Modernize(c);
+            }
+        }
+
+        static readonly string[] ChipNames = { "-10", "-1", "+1", "+10", "<< 最小", "最大 >>" };
+
+        public static void StyleButton(Button b, bool primary)
+        {
+            if (Array.IndexOf(ChipNames, b.Text) >= 0)
+            {
+                b.FlatStyle = FlatStyle.Flat;
+                b.FlatAppearance.BorderSize = 1;
+                b.FlatAppearance.BorderColor = Color.FromArgb(205, 211, 220);
+                b.BackColor = Color.FromArgb(237, 240, 244);
+                b.ForeColor = Color.FromArgb(60, 68, 80);
+                b.Font = new Font("Microsoft YaHei UI", 8.5f, FontStyle.Bold);
+                b.Cursor = Cursors.Hand;
+                b.Resize += delegate { RoundRegion(b, 7); };
+                RoundRegion(b, 7);
+                return;
+            }
+            if (b.Text == "修")
+            {
+                b.FlatStyle = FlatStyle.Flat;
+                b.FlatAppearance.BorderSize = 1;
+                b.FlatAppearance.BorderColor = Color.FromArgb(198, 219, 245);
+                b.BackColor = Color.FromArgb(240, 246, 255);
+                b.ForeColor = AccentDeep;
+                b.Font = new Font("Microsoft YaHei UI", 8f, FontStyle.Bold);
+                b.Cursor = Cursors.Hand;
+                b.Resize += delegate { RoundRegion(b, 6); };
+                RoundRegion(b, 6);
+                return;
+            }
+            b.FlatStyle = FlatStyle.Flat;
+            b.FlatAppearance.BorderSize = primary ? 0 : 1;
+            b.FlatAppearance.BorderColor = Color.FromArgb(214, 219, 227);
+            b.BackColor = primary ? Accent : Color.FromArgb(247, 248, 250);
+            b.ForeColor = primary ? Color.White : Color.FromArgb(75, 82, 92);
+            b.Font = new Font("Microsoft YaHei UI", primary ? 9.5f : 9f, primary ? FontStyle.Bold : FontStyle.Regular);
+            b.Cursor = Cursors.Hand;
+            b.Resize += delegate { RoundRegion(b, 9); };
+            RoundRegion(b, 9);
+        }
+
+        public static void StyleSwatch(Button b)
+        {
+            b.FlatStyle = FlatStyle.Flat;
+            b.FlatAppearance.BorderSize = 1;
+            b.FlatAppearance.BorderColor = Color.FromArgb(205, 211, 220);
+            b.Cursor = Cursors.Hand;
+            b.Font = new Font("Microsoft YaHei UI", 8f, FontStyle.Bold);
+            b.Resize += delegate { RoundRegion(b, 7); };
+            RoundRegion(b, 7);
+        }
+
+        public static void RoundRegion(Control c, int radius)
+        {
+            if (c.Width <= 0 || c.Height <= 0) return;
+            using (GraphicsPath path = Rounded(new Rectangle(0, 0, c.Width, c.Height), radius))
+                c.Region = new Region(path);
+        }
+
+
+        public sealed class FieldHost : Panel
+        {
+            public FieldHost()
+            {
+                SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint |
+                         ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
+                BackColor = Bg;
+            }
+
+            protected override void OnPaint(PaintEventArgs e)
+            {
+                e.Graphics.Clear(BackColor);
+                e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+                Rectangle rect = new Rectangle(0, 0, Width - 1, Height - 1);
+                using (GraphicsPath path = Rounded(rect, 8))
+                using (SolidBrush fill = new SolidBrush(Surface))
+                using (Pen pen = new Pen(Border))
+                {
+                    e.Graphics.FillPath(fill, path);
+                    e.Graphics.DrawPath(pen, path);
+                }
+            }
+        }
+
+        public static void WrapField(Control field)
+        {
+            Control parent = field.Parent;
+            if (parent == null || parent is FieldHost) return;
+            Rectangle bounds = field.Bounds;
+            FieldHost host = new FieldHost();
+            host.Bounds = new Rectangle(bounds.X - 8, bounds.Y - 4, bounds.Width + 16, bounds.Height + 9);
+            parent.Controls.Add(host);
+            host.BringToFront();
+            parent.Controls.Remove(field);
+            field.Bounds = new Rectangle(8, 4, bounds.Width, bounds.Height);
+            host.Controls.Add(field);
+            TextBox tb = field as TextBox;
+            if (tb != null) tb.BorderStyle = BorderStyle.None;
+            ComboBox cb = field as ComboBox;
+            if (cb != null) { cb.FlatStyle = FlatStyle.Flat; cb.BackColor = Surface; }
+            NumericUpDown num = field as NumericUpDown;
+            if (num != null) num.BorderStyle = BorderStyle.None;
+        }
+
+        public sealed class CardBox : GroupBox
+        {
+            public CardBox()
+            {
+                SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint |
+                         ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
+                BackColor = Surface;
+                ForeColor = Ink;
+            }
+
+            protected override void OnPaint(PaintEventArgs e)
+            {
+                e.Graphics.Clear(BackColor);
+                e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+                Rectangle rect = new Rectangle(0, 10, Width - 5, Height - 13);
+                using (GraphicsPath shadow = Rounded(new Rectangle(rect.X + 2, rect.Y + 3, rect.Width, rect.Height), 12))
+                using (SolidBrush sb = new SolidBrush(Color.FromArgb(18, 0, 0, 0)))
+                    e.Graphics.FillPath(sb, shadow);
+                using (GraphicsPath path = Rounded(rect, 12))
+                using (SolidBrush fill = new SolidBrush(Surface))
+                using (Pen pen = new Pen(Border))
+                {
+                    e.Graphics.FillPath(fill, path);
+                    e.Graphics.DrawPath(pen, path);
+                }
+                using (Font title = new Font("Microsoft YaHei UI", 10.5f, FontStyle.Bold))
+                    e.Graphics.DrawString(Text, title, new SolidBrush(Ink), 16, 0);
+            }
+        }
+}
 }

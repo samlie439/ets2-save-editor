@@ -24,9 +24,9 @@ namespace Ets2Save
 
         // ------------------------------------------------------------------
         // right panel
-        ComboBox cmbRoot;
-        ComboBox cmbProfile;
-        ComboBox cmbSave;
+        SearchCombo cmbRoot;
+        SearchCombo cmbProfile;
+        SearchCombo cmbSave;
         Label lblInfo;
         Label lblStatus = new Label();
         PictureBox picPortrait;
@@ -49,13 +49,14 @@ namespace Ets2Save
         TextBox txtCompanyName;
         Label lblNameCount;
         TextBox txtMoney;
-        ComboBox cmbHq;
+        SearchCombo cmbHq;
         ListBox lstGarages;
         Label lblGarageCount;
+        readonly List<SiiBlock> _garageBlocks = new List<SiiBlock>();
 
         // ------------------------------------------------------------------
         // truck tab
-        ComboBox cmbTruck;
+        SearchCombo cmbTruck;
         ProgressBar[] _bars = new ProgressBar[5];
         Label[] _barValues = new Label[5];
         Panel pnlFuelFill;
@@ -65,22 +66,22 @@ namespace Ets2Save
 
         // ------------------------------------------------------------------
         // trailer tab
-        ComboBox cmbTrailer;
+        SearchCombo cmbTrailer;
         ProgressBar[] _tBars = new ProgressBar[4];
         Panel pnlTFuel;
 
         // ------------------------------------------------------------------
         // freight tab
-        ComboBox cmbFreightCountry;
-        ComboBox cmbFreightCompany;
-        ComboBox cmbSourceCity;
-        ComboBox cmbSourceCompany;
-        ComboBox cmbDestCity;
-        ComboBox cmbDestCompany;
-        ComboBox cmbCargo;
-        ComboBox cmbUrgency;
-        ComboBox cmbTrailerDef;
-        ComboBox cmbTrailerVariant;
+        SearchCombo cmbFreightCountry;
+        SearchCombo cmbFreightCompany;
+        SearchCombo cmbSourceCity;
+        SearchCombo cmbSourceCompany;
+        SearchCombo cmbDestCity;
+        SearchCombo cmbDestCompany;
+        SearchCombo cmbCargo;
+        SearchCombo cmbUrgency;
+        SearchCombo cmbTrailerDef;
+        SearchCombo cmbTrailerVariant;
         ListBox lstCargoMarket;
         CheckBox chkRandom;
         Label lblDistance;
@@ -101,18 +102,30 @@ namespace Ets2Save
         // ==================================================================
         public MainForm()
         {
-            Text = "欧卡2 存档修改器 v1.6（非官方）";
-            ClientSize = new Size(852, 620);
+            Text = "ETS2 SE Tool [1.0.0]";
+            ClientSize = new Size(860, 640);
             StartPosition = FormStartPosition.CenterScreen;
             FormBorderStyle = FormBorderStyle.FixedSingle;
+            AutoScaleMode = AutoScaleMode.None;
             MaximizeBox = false;
+            HelpButton = false;
             Font = new Font("Microsoft YaHei UI", 9f);
             BackColor = UiTheme.PageBack;
 
             BuildMenu();
             BuildRightPanel();
+            BackColor = UiTheme.Bg;
             BuildTabs();
             LoadSlots();
+            Shown += delegate
+            {
+                UiTheme.Modernize(this);
+                StylePrimary();
+                tabs.ItemSize = new Size(112, 34);
+                tabs.DrawMode = TabDrawMode.OwnerDrawFixed;
+                tabs.DrawItem += DrawModernTab;
+                tabs.Invalidate();
+            };
         }
 
         // ------------------------------------------------------------------
@@ -149,9 +162,9 @@ namespace Ets2Save
             return c;
         }
 
-        GroupBox Group(string text, int x, int y, int w, int h)
+        UiTheme.CardBox Group(string text, int x, int y, int w, int h)
         {
-            GroupBox g = new GroupBox();
+            UiTheme.CardBox g = new UiTheme.CardBox();
             g.Text = text;
             g.SetBounds(x, y, w, h);
             return g;
@@ -213,7 +226,7 @@ namespace Ets2Save
         // ==================================================================
         void BuildRightPanel()
         {
-            Button ets2 = Btn("ETS 2", 612, 48, 100, 46, delegate { });
+            Button ets2 = Btn("ETS 2", 612, 44, 204, 48, delegate { });
             ets2.Font = new Font("Microsoft YaHei UI", 12f, FontStyle.Bold);
             ets2.TextAlign = ContentAlignment.MiddleRight;
             ets2.Image = UiTheme.TruckLogo(40, 30);
@@ -224,71 +237,60 @@ namespace Ets2Save
             ets2.FlatAppearance.BorderSize = 2;
             Controls.Add(ets2);
 
-            Button ats = Btn("ATS", 716, 48, 100, 46, delegate { });
-            ats.Font = new Font("Microsoft YaHei UI", 12f, FontStyle.Bold);
-            ats.TextAlign = ContentAlignment.MiddleRight;
-            ats.Image = UiTheme.TruckLogo(34, 30);
-            ats.ImageAlign = ContentAlignment.MiddleLeft;
-            ats.Enabled = false;
-            Controls.Add(ats);
+            Controls.Add(BtnD("添加自定义文件夹", 612, 100, 204, 26, null));
 
-            Controls.Add(BtnD("添加自定义文件夹", 612, 98, 204, 22, null));
-
-            GroupBox saves = Group("档案与存档", 612, 124, 204, 440);
+            GroupBox saves = Group("档案与存档", 612, 136, 204, 446);
             Controls.Add(saves);
 
             picPortrait = new PictureBox();
-            picPortrait.SetBounds(10, 22, 112, 92);
+            picPortrait.SetBounds(10, 20, 112, 92);
             picPortrait.Image = UiTheme.Portrait(112, 92);
             picPortrait.SizeMode = PictureBoxSizeMode.StretchImage;
             saves.Controls.Add(picPortrait);
 
-            CheckBox backup = Chk("备份", 142, 46, 58, 20);
+            CheckBox backup = Chk("备份", 142, 44, 58, 20);
             backup.Checked = true;
             backup.Enabled = false;
             saves.Controls.Add(backup);
 
-            cmbRoot = new ComboBox();
+            cmbRoot = new SearchCombo();
             cmbRoot.DropDownStyle = ComboBoxStyle.DropDownList;
-            cmbRoot.SetBounds(10, 124, 168, 22);
+            cmbRoot.SetBounds(10, 122, 168, 22);
             saves.Controls.Add(cmbRoot);
-            Button refresh = Btn("", 182, 124, 18, 22, delegate { LoadSlots(); });
+            Button refresh = Btn("", 182, 122, 18, 22, delegate { LoadSlots(); });
             refresh.Image = UiTheme.TabIcon(6, 12);
             saves.Controls.Add(refresh);
 
-            cmbProfile = new ComboBox();
+            cmbProfile = new SearchCombo();
             cmbProfile.DropDownStyle = ComboBoxStyle.DropDownList;
-            cmbProfile.SetBounds(10, 150, 168, 22);
+            cmbProfile.SetBounds(10, 148, 168, 22);
             cmbProfile.SelectedIndexChanged += delegate { FillSaves(); };
             saves.Controls.Add(cmbProfile);
-            saves.Controls.Add(BtnD("", 182, 150, 18, 22, null));
+            saves.Controls.Add(BtnD("", 182, 148, 18, 22, null));
 
-            cmbSave = new ComboBox();
+            cmbSave = new SearchCombo();
             cmbSave.DropDownStyle = ComboBoxStyle.DropDownList;
             cmbSave.SetBounds(10, 176, 168, 22);
             cmbSave.SelectedIndexChanged += delegate { UpdateInfo(); };
             saves.Controls.Add(cmbSave);
             saves.Controls.Add(BtnD("", 182, 176, 18, 22, null));
 
-            Button decrypt = Btn("解密", 10, 206, 92, 24, delegate { ExportText(); });
-            decrypt.Enabled = false;
-            saves.Controls.Add(decrypt);
-            saves.Controls.Add(Btn("打开文件夹", 108, 206, 86, 24, delegate { OpenFolder(); }));
+            saves.Controls.Add(Btn("打开文件夹", 10, 208, 184, 26, delegate { OpenFolder(); }));
 
-            Button load = Btn("加载存档", 10, 238, 184, 40, delegate { LoadSelected(); });
+            Button load = Btn("加载存档", 10, 244, 184, 42, delegate { LoadSelected(); });
             load.Font = new Font("Microsoft YaHei UI", 12f, FontStyle.Bold);
             saves.Controls.Add(load);
 
-            Button unload = Btn("Unload", 106, 282, 88, 20, delegate { CloseSave(); });
+            Button unload = Btn("Unload", 106, 290, 88, 24, delegate { CloseSave(); });
             unload.Enabled = false;
             unload.Tag = "unload";
             saves.Controls.Add(unload);
 
-            lblStatus = Lbl("", 10, 398, 184, 34);
+            lblStatus = Lbl("", 10, 396, 184, 40);
             lblStatus.ForeColor = Color.FromArgb(0, 80, 150);
             saves.Controls.Add(lblStatus);
 
-            Button save = Btn("保存", 10, 336, 184, 58, OnSave);
+            Button save = Btn("保存", 10, 330, 184, 58, OnSave);
             save.Font = new Font("Microsoft YaHei UI", 15f, FontStyle.Bold);
             saves.Controls.Add(save);
 
@@ -333,44 +335,44 @@ namespace Ets2Save
             TabPage page = new TabPage("档案");
             page.BackColor = UiTheme.PageBack;
 
-            GroupBox level = Group("玩家级别", 8, 4, 414, 96);
-            level.BackColor = UiTheme.LevelBack;
+            GroupBox level = Group("玩家级别", 8, 4, 560, 96);
+            level.BackColor = UiTheme.Surface;
             page.Controls.Add(level);
 
-            level.Controls.Add(Btn("-10", 8, 22, 40, 24, delegate { ChangeLevel(-10); }));
-            level.Controls.Add(Btn("-1", 50, 22, 40, 24, delegate { ChangeLevel(-1); }));
-            level.Controls.Add(Btn("+1", 322, 22, 40, 24, delegate { ChangeLevel(1); }));
-            level.Controls.Add(Btn("+10", 364, 22, 40, 24, delegate { ChangeLevel(10); }));
+            level.Controls.Add(Btn("-10", 12, 22, 40, 26, delegate { ChangeLevel(-10); }));
+            level.Controls.Add(Btn("-1", 56, 22, 40, 26, delegate { ChangeLevel(-1); }));
+            level.Controls.Add(Btn("+1", 462, 22, 40, 26, delegate { ChangeLevel(1); }));
+            level.Controls.Add(Btn("+10", 506, 22, 40, 26, delegate { ChangeLevel(10); }));
 
-            lblLevel = Lbl("1", 108, 14, 70, 44);
+            lblLevel = Lbl("1", 210, 12, 70, 46);
             lblLevel.Font = new Font("Microsoft YaHei UI", 22f, FontStyle.Bold);
             lblLevel.TextAlign = ContentAlignment.MiddleCenter;
             level.Controls.Add(lblLevel);
 
-            lblLegend = Lbl("Newbie", 180, 22, 140, 24);
+            lblLegend = Lbl("Newbie", 284, 22, 150, 26);
             lblLegend.Font = new Font("Microsoft YaHei UI", 11f, FontStyle.Bold);
             lblLegend.ForeColor = Color.Firebrick;
             level.Controls.Add(lblLegend);
 
-            lblXp = Lbl("0 / 0", 108, 56, 212, 20);
+            lblXp = Lbl("0 / 0", 150, 58, 262, 20);
             lblXp.TextAlign = ContentAlignment.MiddleCenter;
             level.Controls.Add(lblXp);
 
-            level.Controls.Add(Btn("<< 最小", 8, 54, 76, 24, delegate { SetLevel(0); }));
-            level.Controls.Add(Btn("最大 >>", 322, 54, 82, 24, delegate { SetLevel(150); }));
+            level.Controls.Add(Btn("<< 最小", 12, 54, 76, 26, delegate { SetLevel(0); }));
+            level.Controls.Add(Btn("最大 >>", 464, 54, 82, 26, delegate { SetLevel(150); }));
 
-            GroupBox skills = Group("技能", 8, 106, 414, 356);
+            GroupBox skills = Group("技能", 8, 106, 560, 356);
             page.Controls.Add(skills);
 
             for (int i = 0; i < 6; i++)
             {
                 PictureBox icon = new PictureBox();
-                icon.SetBounds(10, 16 + i * 56, 48, 48);
+                icon.SetBounds(14, 16 + i * 56, 48, 48);
                 icon.Image = UiTheme.SkillIcon(i, 48);
                 icon.SizeMode = PictureBoxSizeMode.StretchImage;
                 skills.Controls.Add(icon);
 
-                Label name = Lbl(_skillNames[i], 64, 28 + i * 56, 86, 22);
+                Label name = Lbl(_skillNames[i], 70, 28 + i * 56, 86, 22);
                 name.Font = new Font("Microsoft YaHei UI", 9f);
                 skills.Controls.Add(name);
 
@@ -381,7 +383,7 @@ namespace Ets2Save
                     cb.FlatStyle = FlatStyle.Flat;
                     cb.FlatAppearance.BorderColor = Color.FromArgb(120, 90, 40);
                     cb.BackgroundImageLayout = ImageLayout.Stretch;
-                    cb.SetBounds(152 + j * 42, 20 + i * 56, 38, 36);
+                    cb.SetBounds(160 + j * 64, 20 + i * 56, 44, 38);
                     cb.Text = "";
                     cb.Tag = i * 10 + j;
                     cb.BackgroundImage = UiTheme.Gradient(Color.FromArgb(235, 235, 235), UiTheme.GreyDark, 38, 38);
@@ -390,26 +392,6 @@ namespace Ets2Save
                     _skillButtons[i, j] = cb;
                 }
             }
-
-            GroupBox colors = Group("User colors", 428, 4, 158, 300);
-            colors.BackColor = Color.White;
-            page.Controls.Add(colors);
-
-            pnlColors = new Panel();
-            pnlColors.SetBounds(8, 20, 142, 270);
-            colors.Controls.Add(pnlColors);
-            for (int i = 0; i < 8; i++)
-            {
-                Button b = new Button();
-                b.SetBounds(4 + (i % 4) * 34, 4 + (i / 4) * 34, 30, 30);
-                b.FlatStyle = FlatStyle.Flat;
-                b.Text = "X";
-                b.Enabled = false;
-                pnlColors.Controls.Add(b);
-            }
-
-            page.Controls.Add(Btn("+ slot", 428, 394, 158, 32, delegate { AddColorSlot(); }));
-            page.Controls.Add(Btn("分享颜色", 428, 430, 158, 40, null));
 
             chkFatigue = Chk("清除疲劳", 0, 0, 10, 10);
             chkDebt = Chk("清除债务与透支", 0, 0, 10, 10);
@@ -447,14 +429,14 @@ namespace Ets2Save
             page.Controls.Add(txtMoney);
 
             page.Controls.Add(Lbl("总部城市", 132, 84, 70, 20));
-            cmbHq = new ComboBox();
+            cmbHq = new SearchCombo();
             cmbHq.DropDownStyle = ComboBoxStyle.DropDownList;
             cmbHq.SetBounds(206, 82, 272, 24);
             page.Controls.Add(cmbHq);
 
-            page.Controls.Add(BtnD("Garages", 8, 110, 76, 20, null));
-            page.Controls.Add(BtnD("Drivers", 88, 110, 76, 20, null));
-            page.Controls.Add(BtnD("Visited cities", 168, 110, 100, 20, null));
+            page.Controls.Add(BtnD("Garages", 8, 106, 76, 26, null));
+            page.Controls.Add(BtnD("Drivers", 88, 106, 76, 26, null));
+            page.Controls.Add(BtnD("Visited cities", 168, 106, 100, 26, null));
 
             page.Controls.Add(Lbl("车库", 8, 140, 40, 20));
             lblGarageCount = Lbl("0 / 0", 520, 140, 70, 20);
@@ -462,22 +444,121 @@ namespace Ets2Save
             page.Controls.Add(lblGarageCount);
 
             lstGarages = new ListBox();
-            lstGarages.SetBounds(8, 162, 578, 296);
+            lstGarages.SetBounds(8, 162, 578, 280);
             lstGarages.DrawMode = DrawMode.OwnerDrawFixed;
             lstGarages.ItemHeight = 34;
             lstGarages.IntegralHeight = false;
             lstGarages.DrawItem += DrawGarageItem;
             page.Controls.Add(lstGarages);
 
-            page.Controls.Add(BtnD("购买", 8, 466, 140, 44, null));
-            page.Controls.Add(BtnD("升级", 154, 466, 110, 20, null));
-            page.Controls.Add(BtnD("降级", 154, 490, 110, 20, null));
-            page.Controls.Add(BtnD("出售", 270, 466, 100, 44, null));
-            page.Controls.Add(BtnD("", 376, 466, 60, 44, null));
-            page.Controls.Add(BtnD("Select All", 442, 466, 144, 20, null));
-            page.Controls.Add(BtnD("Unselect All", 442, 490, 144, 20, null));
+            page.Controls.Add(Btn("购买", 8, 450, 108, 40, delegate { ChangeGarage(0); }));
+            page.Controls.Add(Btn("升级", 120, 450, 66, 40, delegate { ChangeGarage(1); }));
+            page.Controls.Add(Btn("降级", 190, 450, 66, 40, delegate { ChangeGarage(-1); }));
+            page.Controls.Add(Btn("出售", 260, 450, 72, 40, delegate { ChangeGarage(9); }));
+            page.Controls.Add(BtnD("Select All", 340, 450, 108, 40, null));
+            page.Controls.Add(BtnD("Unselect All", 452, 450, 124, 40, null));
 
             return page;
+        }
+
+        void StylePrimary()
+        {
+            foreach (Button b in new Button[] { FindButton("加载存档"), FindButton("保存") })
+            {
+                if (b == null) continue;
+                b.BackColor = UiTheme.Accent;
+                b.ForeColor = Color.White;
+                b.FlatAppearance.BorderColor = UiTheme.Accent;
+                b.Font = new Font("Microsoft YaHei UI", 11f, FontStyle.Bold);
+            }
+        }
+
+        Button FindButton(string text)
+        {
+            foreach (Control c in Controls)
+            {
+                foreach (Control inner in c.Controls)
+                {
+                    Button b = inner as Button;
+                    if (b != null && b.Text == text) return b;
+                }
+            }
+            return null;
+        }
+
+        void DrawModernTab(object sender, DrawItemEventArgs e)
+        {
+            TabControl tab = (TabControl)sender;
+            bool selected = e.Index == tab.SelectedIndex;
+            using (SolidBrush back = new SolidBrush(selected ? UiTheme.Surface : UiTheme.Bg))
+                e.Graphics.FillRectangle(back, e.Bounds);
+            if (selected)
+            {
+                using (SolidBrush accent = new SolidBrush(UiTheme.Accent))
+                    e.Graphics.FillRectangle(accent, e.Bounds.Left + 10, e.Bounds.Bottom - 3, e.Bounds.Width - 20, 3);
+            }
+            string text = tab.TabPages[e.Index].Text;
+            using (StringFormat sf = new StringFormat())
+            {
+                sf.Alignment = StringAlignment.Center;
+                sf.LineAlignment = StringAlignment.Center;
+                using (SolidBrush ink = new SolidBrush(selected ? UiTheme.Accent : UiTheme.Muted))
+                    e.Graphics.DrawString(text, new Font("Microsoft YaHei UI", 9.5f, selected ? FontStyle.Bold : FontStyle.Regular), ink, e.Bounds, sf);
+            }
+        }
+
+        void ChangeGarage(int mode)
+        {
+            if (_editor == null) { MessageBox.Show("请先加载存档。", Text); return; }
+            int index = lstGarages.SelectedIndex;
+            if (index < 0 || index >= _garageBlocks.Count) { MessageBox.Show("请先在列表里选择一个车库。", Text); return; }
+            SiiBlock garage = _garageBlocks[index];
+            long status = Convert.ToInt64(garage.Get("status") ?? 0L, CultureInfo.InvariantCulture);
+            long next;
+            if (mode == 0) next = 1;
+            else if (mode == 1) next = Math.Min(2, status + 1);
+            else if (mode == -1) next = Math.Max(0, status - 1);
+            else
+            {
+                if (MessageBox.Show("确定出售该车库？里面的车辆不会被删除，但需要你自行处理。", Text,
+                        MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes) return;
+                next = 0;
+            }
+            if (next == status) return;
+            _editor.File.SetInt(garage, "status", next);
+            FillCompanyPage();
+            if (index < lstGarages.Items.Count) lstGarages.SelectedIndex = index;
+            lblStatus.Text = "车库状态已修改（未保存）";
+        }
+
+        void RepairTruckAll()
+        {
+            if (_editor == null || _truckIndex < 0) { MessageBox.Show("请先选择卡车。", Text); return; }
+            TruckInfo t = _editor.Trucks[_truckIndex];
+            foreach (string field in new string[] { "engine_wear", "transmission_wear", "chassis_wear", "cabin_wear",
+                                                    "engine_wear_unfixable", "transmission_wear_unfixable",
+                                                    "cabin_wear_unfixable", "chassis_wear_unfixable" })
+            {
+                SiiValue v = t.Block.GetValue(field);
+                if (v != null && v.Type == SiiType.Single) _editor.File.SetFloat(t.Block, field, 0f);
+            }
+            SiiValue wheels = t.Block.GetValue("wheels_wear");
+            if (wheels != null && wheels.Type == SiiType.SingleArray)
+                for (int i = 0; i < wheels.Count; i++) _editor.File.SetFloatArrayItem(t.Block, "wheels_wear", i, 0f);
+            t.EngineWear = 0f; t.TransmissionWear = 0f; t.ChassisWear = 0f; t.CabinWear = 0f;
+            if (t.WheelsWear != null) for (int i = 0; i < t.WheelsWear.Length; i++) t.WheelsWear[i] = 0f;
+            OnTruckChanged(null, EventArgs.Empty);
+            lblStatus.Text = "已修复全部部件（未保存）";
+        }
+
+        void FillTruckFuel()
+        {
+            if (_editor == null || _truckIndex < 0) { MessageBox.Show("请先选择卡车。", Text); return; }
+            TruckInfo t = _editor.Trucks[_truckIndex];
+            if (t.Block.GetValue("fuel_relative") == null) { MessageBox.Show("这辆车没有油量字段。", Text); return; }
+            _editor.File.SetFloat(t.Block, "fuel_relative", 1f);
+            SetFuel(1f);
+            lblStatus.Text = "已加满油（未保存）";
         }
 
         void DrawGarageItem(object sender, DrawItemEventArgs e)
@@ -502,7 +583,7 @@ namespace Ets2Save
             page.BackColor = UiTheme.PageBack;
 
             page.Controls.Add(Lbl("卡车", 8, 6, 40, 20));
-            cmbTruck = new ComboBox();
+            cmbTruck = new SearchCombo();
             cmbTruck.DropDownStyle = ComboBoxStyle.DropDownList;
             cmbTruck.SetBounds(8, 24, 578, 24);
             cmbTruck.SelectedIndexChanged += OnTruckChanged;
@@ -510,8 +591,8 @@ namespace Ets2Save
 
             page.Controls.Add(BtnD("玩家当前卡车", 8, 54, 150, 28, null));
             page.Controls.Add(BtnD("将该卡车设为玩家当前卡车", 162, 54, 186, 28, null));
-            page.Controls.Add(BtnD("", 352, 54, 30, 28, null));
-            page.Controls.Add(BtnD("", 386, 54, 30, 28, delegate { numFuelQuickFill(); }));
+            page.Controls.Add(Btn("修复全部", 352, 54, 110, 28, delegate { RepairTruckAll(); }));
+            page.Controls.Add(Btn("加满油", 466, 54, 120, 28, delegate { FillTruckFuel(); }));
 
             GroupBox details = Group("详细数据", 8, 88, 330, 344);
             page.Controls.Add(details);
@@ -541,7 +622,7 @@ namespace Ets2Save
                 _barValues[i] = value;
 
                 int index = i;
-                Button repair = Btn("修", 282, 22 + i * 38, 24, 20, delegate { RepairPart(index); });
+                Button repair = Btn("修", 280, 21 + i * 38, 28, 22, delegate { RepairPart(index); });
                 repair.Font = new Font("Microsoft YaHei UI", 7.5f);
                 details.Controls.Add(repair);
             }
@@ -570,12 +651,12 @@ namespace Ets2Save
             txtPlate.ReadOnly = true;
             page.Controls.Add(txtPlate);
 
-            GroupBox share = Group("分享卡车设置", 8, 470, 578, 66);
+            GroupBox share = Group("分享卡车设置", 8, 470, 578, 74);
             page.Controls.Add(share);
             string[] btns = { "复制喷漆设置", "复制卡车数据", "复制所有卡车设置", "粘贴喷漆设置", "粘贴卡车数据", "粘贴所有卡车设置" };
             for (int i = 0; i < 6; i++)
             {
-                Button b = Btn(btns[i], 8 + (i % 3) * 190, 18 + (i / 3) * 24, 182, 20, null);
+                Button b = Btn(btns[i], 8 + (i % 3) * 190, 16 + (i / 3) * 28, 182, 26, null);
                 b.Enabled = false;
                 share.Controls.Add(b);
             }
@@ -592,7 +673,7 @@ namespace Ets2Save
             page.BackColor = UiTheme.PageBack;
 
             page.Controls.Add(Lbl("Trailer", 8, 6, 60, 20));
-            cmbTrailer = new ComboBox();
+            cmbTrailer = new SearchCombo();
             cmbTrailer.DropDownStyle = ComboBoxStyle.DropDownList;
             cmbTrailer.SetBounds(8, 24, 578, 24);
             cmbTrailer.Items.Add("- NONE -");
@@ -638,7 +719,7 @@ namespace Ets2Save
                               "Paste Paint Settings", "Paste Truck Details", "Paste All Truck Settings" };
             for (int i = 0; i < 6; i++)
             {
-                Button b = Btn(btns[i], 8 + (i % 3) * 190, 18 + (i / 3) * 24, 182, 20, null);
+                Button b = Btn(btns[i], 8 + (i % 3) * 190, 16 + (i / 3) * 28, 182, 26, null);
                 b.Enabled = false;
                 share.Controls.Add(b);
             }
@@ -697,13 +778,13 @@ namespace Ets2Save
             cmbTrailerVariant = Combo(360, 138, 130);
             page.Controls.Add(cmbTrailerVariant);
 
-            page.Controls.Add(Btn("添加任务到列表", 8, 166, 300, 24, delegate { AddFreightOffer(); }));
-            page.Controls.Add(Btn("随机生成货物", 314, 166, 130, 24, delegate { RandomCargo(); }));
+            page.Controls.Add(Btn("添加任务到列表", 8, 164, 300, 28, delegate { AddFreightOffer(); }));
+            page.Controls.Add(Btn("随机生成货物", 314, 164, 130, 28, delegate { RandomCargo(); }));
 
             page.Controls.Add(Lbl("路线里程:", 8, 196, 60, 20));
             lblDistance = Lbl("-", 70, 196, 200, 20);
             page.Controls.Add(lblDistance);
-            page.Controls.Add(Btn("清空列表", 380, 194, 120, 24, delegate { RefreshOffers(); }));
+            page.Controls.Add(Btn("清空列表", 380, 194, 120, 26, delegate { RefreshOffers(); }));
 
             lvOffers = new ListView();
             lvOffers.SetBounds(8, 220, 578, 348);
@@ -725,9 +806,9 @@ namespace Ets2Save
             return page;
         }
 
-        ComboBox Combo(int x, int y, int w)
+        SearchCombo Combo(int x, int y, int w)
         {
-            ComboBox c = new ComboBox();
+            SearchCombo c = new SearchCombo();
             c.SetBounds(x, y, w, 24);
             c.DropDownStyle = ComboBoxStyle.DropDown;
             return c;
@@ -740,27 +821,27 @@ namespace Ets2Save
             page.BackColor = UiTheme.PageBack;
 
             page.Controls.Add(Lbl("起点", 8, 10, 40, 20));
-            ComboBox city = Combo(48, 8, 180);
+            SearchCombo city = Combo(48, 8, 180);
             city.Items.Add("All");
             city.SelectedIndex = 0;
             page.Controls.Add(city);
 
             page.Controls.Add(Lbl("公司", 240, 10, 40, 20));
-            ComboBox comp = Combo(280, 8, 160);
+            SearchCombo comp = Combo(280, 8, 160);
             comp.Items.Add("All");
             comp.SelectedIndex = 0;
             page.Controls.Add(comp);
 
-            page.Controls.Add(Btn("刷新列表", 8, 40, 180, 22, delegate { FillCargoMarketPage(); }));
-            page.Controls.Add(Btn("查看自有挂车", 280, 40, 180, 22, delegate { ShowTrailers(); }));
-            page.Controls.Add(BtnD("随机货物列表", 8, 66, 180, 22, null));
-            page.Controls.Add(BtnD("随机货物列表", 280, 66, 180, 22, null));
+            page.Controls.Add(Btn("刷新列表", 8, 42, 180, 28, delegate { FillCargoMarketPage(); }));
+            page.Controls.Add(Btn("查看自有挂车", 280, 42, 180, 28, delegate { ShowTrailers(); }));
+            page.Controls.Add(BtnD("随机货物列表", 8, 76, 180, 28, null));
+            page.Controls.Add(BtnD("随机货物列表", 280, 76, 180, 28, null));
 
             lstCargoMarket = new ListBox();
-            lstCargoMarket.SetBounds(8, 96, 452, 300);
+            lstCargoMarket.SetBounds(8, 116, 560, 236);
             page.Controls.Add(lstCargoMarket);
 
-            Label info = Lbl("货物市场任务来自 job_info（需要自有挂车）。修改后用右侧“保存”写入。", 8, 402, 560, 40);
+            Label info = Lbl("货物市场任务来自 job_info（需要自有挂车）。修改后用右侧“保存”写入。", 8, 364, 560, 40);
             info.ForeColor = Color.DimGray;
             page.Controls.Add(info);
 
@@ -783,10 +864,10 @@ namespace Ets2Save
             TabPage page = new TabPage("联机工具");
             page.BackColor = UiTheme.PageBack;
 
-            page.Controls.Add(Btn("复制车辆位置", 8, 8, 280, 24, delegate { CopyTruckPosition(); }));
-            page.Controls.Add(Btn("粘贴车辆位置", 298, 8, 280, 24, delegate { PasteTruckPosition(); }));
-            page.Controls.Add(Btn("复制导航路线", 8, 34, 280, 24, delegate { CopyGpsRoute(); }));
-            page.Controls.Add(Btn("粘贴导航路线", 298, 34, 280, 24, delegate { PasteGpsRoute(); }));
+            page.Controls.Add(Btn("复制车辆位置", 8, 8, 280, 30, delegate { CopyTruckPosition(); }));
+            page.Controls.Add(Btn("粘贴车辆位置", 298, 8, 280, 30, delegate { PasteTruckPosition(); }));
+            page.Controls.Add(Btn("复制导航路线", 8, 42, 280, 30, delegate { CopyGpsRoute(); }));
+            page.Controls.Add(Btn("粘贴导航路线", 298, 42, 280, 30, delegate { PasteGpsRoute(); }));
 
             Button big1 = BtnD("从多个存档中复制车辆位置", 8, 68, 280, 30, null);
             Button big2 = BtnD("根据多个车辆位置创建多个存档", 298, 68, 280, 30, null);
@@ -988,7 +1069,7 @@ namespace Ets2Save
             _loading = true;
             UpdateLevelLabels();
             FillSkills();
-            FillColors();
+            if (pnlColors != null) FillColors();
             chkFatigue.Checked = false;
             chkDebt.Checked = false;
             _loading = false;
@@ -1079,11 +1160,12 @@ namespace Ets2Save
                 {
                     bool on = i == 0 ? (value & (1 << j)) != 0 : value >= j + 1;
                     _skillButtons[i, j].Checked = on;
-                    Image gold = on ? UiAssets.Get("base", 38, 36) : null;
-                    if (gold != null) _skillButtons[i, j].BackgroundImage = gold;
-                    else _skillButtons[i, j].BackgroundImage = UiTheme.Gradient(
-                        on ? UiTheme.GoldLight : Color.FromArgb(235, 235, 235),
-                        on ? UiTheme.Gold : UiTheme.GreyDark, 38, 38);
+                    _skillButtons[i, j].BackColor = on ? Color.FromArgb(176, 128, 32) : Color.FromArgb(236, 238, 241);
+                    _skillButtons[i, j].FlatAppearance.BorderColor = on ? Color.FromArgb(140, 100, 24) : Color.FromArgb(210, 214, 220);
+                    _skillButtons[i, j].BackgroundImage = UiTheme.Gradient(
+                        on ? Color.FromArgb(214, 176, 96) : Color.FromArgb(240, 242, 245),
+                        on ? Color.FromArgb(150, 104, 30) : Color.FromArgb(214, 218, 225), 38, 36);
+                    _skillButtons[i, j].BackgroundImageLayout = ImageLayout.Stretch;
                 }
             }
         }
@@ -1121,8 +1203,8 @@ namespace Ets2Save
             {
                 Button b = new Button();
                 b.SetBounds(4 + (i % 4) * 34, 4 + (i / 4) * 34, 30, 30);
-                b.FlatStyle = FlatStyle.Flat;
                 b.BackColor = colors[i] == 0 ? Color.White : Color.FromArgb(unchecked((int)colors[i]));
+                UiTheme.StyleSwatch(b);
                 b.Tag = i;
                 b.Click += delegate { PickColor((int)b.Tag); };
                 pnlColors.Controls.Add(b);
@@ -1145,7 +1227,7 @@ namespace Ets2Save
                 v.Data = raw;
                 v.Dirty = true;
                 _editor.File.FindBlock("economy").Dirty = true;
-                FillColors();
+                if (pnlColors != null) FillColors();
             }
         }
 
@@ -1161,7 +1243,7 @@ namespace Ets2Save
             v.Count = raw.Length;
             v.Dirty = true;
             _editor.File.FindBlock("economy").Dirty = true;
-            FillColors();
+            if (pnlColors != null) FillColors();
         }
 
         // ==================================================================
@@ -1189,6 +1271,7 @@ namespace Ets2Save
 
             lstGarages.BeginUpdate();
             lstGarages.Items.Clear();
+            _garageBlocks.Clear();
             List<SiiBlock> garages = _editor.File.FindBlocks("garage");
             int owned = 0;
             for (int i = 0; i < garages.Count; i++)
@@ -1200,8 +1283,10 @@ namespace Ets2Save
                     ? g.Ident.Substring(7) : g.Ident;
                 name = CultureInfo.InvariantCulture.TextInfo.ToTitleCase(name.Replace('_', ' '));
                 lstGarages.Items.Add(name + "|" + (status > 0 ? "已购买" : "Not owned"));
+                _garageBlocks.Add(g);
             }
             lstGarages.EndUpdate();
+            if (lstGarages.Items.Count > 0 && lstGarages.SelectedIndex < 0) lstGarages.SelectedIndex = 0;
             lblGarageCount.Text = string.Format("{0} / {1}", owned, garages.Count);
         }
 
@@ -1266,6 +1351,10 @@ namespace Ets2Save
             if (_editor == null || _truckIndex < 0) return;
             TruckInfo t = _editor.Trucks[_truckIndex];
             string[] fields = { "engine_wear", "transmission_wear", "chassis_wear", "cabin_wear" };
+            if (index == 0) t.EngineWear = 0f;
+            if (index == 1) t.TransmissionWear = 0f;
+            if (index == 2) t.ChassisWear = 0f;
+            if (index == 3) t.CabinWear = 0f;
             if (index < 4) _editor.File.SetFloat(t.Block, fields[index], 0f);
             else
             {
@@ -1715,7 +1804,7 @@ namespace Ets2Save
 
         void ShowAbout()
         {
-            MessageBox.Show("欧卡2 存档修改器 v1.6（非官方）\n\n本工具与 SCS Software 无关，未包含任何游戏美术资源。\n仅用于单机存档，使用风险自负；联机请勿使用改过的存档。\n\n格式解析参考：SII_Decrypt (MPL-2.0)\n界面设计参考：TS SE Tool (Apache-2.0)", Text);
+            MessageBox.Show("ETS2 存档修改器 1.0\n界面参考 TS SE Tool\n\n直接解析二进制存档，只改写目标字段。", Text);
         }
 
         void FillCargoMarketPage()

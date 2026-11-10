@@ -1,4 +1,4 @@
-# ETS2 Save Editor
+# 欧卡2 存档修改器（非官方）
 
 > 与 SCS Software 无关，仅限单机使用，不含游戏素材和存档。
 
